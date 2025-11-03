@@ -1,8 +1,8 @@
 diff --git a/node_modules/playwright/lib/mcp/browser/tools/network.js b/node_modules/playwright/lib/mcp/browser/tools/network.js
-index a8ff17b..ec104be 100644
+index a8ff17b..4b35649 100644
 --- a/node_modules/playwright/lib/mcp/browser/tools/network.js
 +++ b/node_modules/playwright/lib/mcp/browser/tools/network.js
-@@ -49,6 +49,176 @@ async function renderRequest(request) {
+@@ -49,6 +49,183 @@ async function renderRequest(request) {
    }
    return result.join(" ");
  }
@@ -47,6 +47,7 @@ index a8ff17b..ec104be 100644
 +      if (entry)
 +        entries.push(entry);
 +    } catch (e) {
++      // Silently skip requests that fail to serialize (e.g., canceled, blocked)
 +    }
 +  }
 +  return {
@@ -79,6 +80,7 @@ index a8ff17b..ec104be 100644
 +      requestHeaders.push({ name, value });
 +    }
 +  } catch (e) {
++    // Headers may not be available for some requests (e.g., failed/blocked)
 +  }
 +  const postData = request.postData();
 +  const requestEntry = {
@@ -139,6 +141,7 @@ index a8ff17b..ec104be 100644
 +        const body = await response2.body();
 +        bodySize = body.length;
 +      } catch (e) {
++        // Body may not be available for some responses (e.g., 204 No Content)
 +      }
 +      const contentTypeHeader = headers["content-type"];
 +      if (contentTypeHeader) {
@@ -161,17 +164,21 @@ index a8ff17b..ec104be 100644
 +      const timing = request.timing();
 +      if (timing) {
 +        entry.time = timing.responseEnd;
++        const sslTime = timing.secureConnectionStart >= 0 
++          ? Math.max(0, timing.connectEnd - timing.secureConnectionStart)
++          : -1;
 +        entry.timings = {
-+          dns: timing.domainLookupEnd - timing.domainLookupStart,
-+          connect: timing.connectEnd - timing.connectStart,
-+          ssl: timing.connectEnd - timing.secureConnectionStart,
-+          send: timing.requestStart - timing.connectEnd,
-+          wait: timing.responseStart - timing.requestStart,
-+          receive: timing.responseEnd - timing.responseStart
++          dns: Math.max(0, timing.domainLookupEnd - timing.domainLookupStart),
++          connect: Math.max(0, timing.connectEnd - timing.connectStart),
++          ssl: sslTime,
++          send: Math.max(0, timing.requestStart - timing.connectEnd),
++          wait: Math.max(0, timing.responseStart - timing.requestStart),
++          receive: Math.max(0, timing.responseEnd - timing.responseStart)
 +        };
 +      }
 +    }
 +  } catch (e) {
++    // Response may not be available for some requests (e.g., canceled, blocked)
 +  }
 +  return entry;
 +}
