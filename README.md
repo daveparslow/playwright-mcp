@@ -693,6 +693,15 @@ http.createServer(async (req, res) => {
 
 <!-- NOTE: This has been generated via update-readme.js -->
 
+- **browser_save_network_har**
+  - Title: Save network requests as HAR
+  - Description: Save all network requests since loading the page as a HAR (HTTP Archive) file
+  - Parameters:
+    - `filename` (string, optional): File name to save the HAR to. Defaults to `network-{timestamp}.har` if not specified. Prefer relative file names to stay within the output directory.
+  - Read-only: **true**
+
+<!-- NOTE: This has been generated via update-readme.js -->
+
 - **browser_select_option**
   - Title: Select option
   - Description: Select an option in a dropdown
